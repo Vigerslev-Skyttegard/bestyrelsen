@@ -1,0 +1,133 @@
+name: Update test parking data
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: JSON data sent by the board administration page
+        required: true
+        type: string
+      validate_only:
+        description: Validate access and payload without changing data.json
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: update-test-parking-data
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    name: Validate and update data.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Validate incoming JSON and write the one permitted file
+        env:
+          PAYLOAD_JSON: ${{ inputs.payload }}
+          VALIDATE_ONLY: ${{ inputs.validate_only }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          from datetime import datetime
+          from pathlib import Path
+
+          raw = os.environ.get("PAYLOAD_JSON", "")
+          if not raw or len(raw) > 60000:
+              raise SystemExit("Payload is empty or exceeds the 60,000-character safety limit.")
+
+          try:
+              data = json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"Invalid JSON payload: {exc}")
+
+          if not isinstance(data, dict) or data.get("schemaVersion") != 1:
+              raise SystemExit("Unsupported data format: schemaVersion must be 1.")
+
+          if set(data.keys()) != {"schemaVersion", "updatedAt", "rows"}:
+              raise SystemExit("Unexpected top-level properties in data payload.")
+
+          updated_at = data.get("updatedAt")
+          if updated_at is not None:
+              if not isinstance(updated_at, str):
+                  raise SystemExit("updatedAt must be an ISO timestamp or null.")
+              try:
+                  datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+              except ValueError:
+                  raise SystemExit("updatedAt is not a valid ISO timestamp.")
+
+          rows = data.get("rows")
+          if not isinstance(rows, list) or len(rows) > 100:
+              raise SystemExit("rows must be an array with no more than 100 entries.")
+
+          clean_rows = []
+          seen_ids = set()
+          for index, row in enumerate(rows, start=1):
+              if not isinstance(row, dict) or set(row.keys()) != {"id", "address", "car", "motorcycle"}:
+                  raise SystemExit(f"Row {index} has missing or unexpected fields.")
+
+              row_id = row["id"]
+              if not isinstance(row_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", row_id):
+                  raise SystemExit(f"Row {index} has an invalid id.")
+              if row_id in seen_ids:
+                  raise SystemExit(f"Duplicate row id: {row_id}")
+              seen_ids.add(row_id)
+
+              clean = {"id": row_id}
+              for key, maximum, required in (("address", 120, True), ("car", 80, False), ("motorcycle", 80, False)):
+                  value = row[key]
+                  if not isinstance(value, str):
+                      raise SystemExit(f"Row {index}: {key} must be text.")
+                  value = value.strip()
+                  if len(value) > maximum:
+                      raise SystemExit(f"Row {index}: {key} is longer than {maximum} characters.")
+                  if required and not value:
+                      raise SystemExit(f"Row {index}: address is required.")
+                  if any(ord(char) < 32 and char not in "\t" for char in value):
+                      raise SystemExit(f"Row {index}: {key} contains a control character.")
+                  clean[key] = value
+              clean_rows.append(clean)
+
+          normalized = {
+              "schemaVersion": 1,
+              "updatedAt": updated_at,
+              "rows": clean_rows,
+          }
+
+          validate_only = os.environ.get("VALIDATE_ONLY", "false").lower() == "true"
+          if validate_only:
+              print(f"Validation successful. {len(clean_rows)} example rows checked; data.json was not changed.")
+              sys.exit(0)
+
+          destination = Path("testparkeringside/data.json")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          temporary = Path("testparkeringside/data.json.tmp")
+          temporary.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          temporary.replace(destination)
+          print(f"Validated and prepared {destination}. No other file is written by this step.")
+          PY
+
+      - name: Commit only testparkeringside/data.json
+        if: ${{ inputs.validate_only != true }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- testparkeringside/data.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -m "Update test parking data"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
