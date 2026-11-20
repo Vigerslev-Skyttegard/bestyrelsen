@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": null,
+  "rows": [
+    {
+      "id": "test-row-1",
+      "address": "TESTADRESSE 1, 1. th",
+      "car": "TEST-BIL-01",
+      "motorcycle": ""
+    },
+    {
+      "id": "test-row-2",
+      "address": "TESTADRESSE 2, 2. tv",
+      "car": "På test-venteliste",
+      "motorcycle": "TEST-MC-01"
+    },
+    {
+      "id": "test-row-3",
+      "address": "TESTADRESSE 3, st. th",
+      "car": "",
+      "motorcycle": "På test-venteliste"
+    }
+  ]
+}
