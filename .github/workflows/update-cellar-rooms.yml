@@ -46,11 +46,12 @@ jobs:
           from datetime import datetime
           from pathlib import Path
 
+          # Room number, fixed area in m². Areas cannot be edited through the admin page.
           EXPECTED = [
-              ("room-001", 1), ("room-002", 2), ("room-003", 3),
-              ("room-012", 12), ("room-033", 33), ("room-045", 45),
-              ("room-055", 55), ("room-068", 68), ("room-069", 69),
-              ("room-078", 78), ("room-080", 80),
+              ("room-001", 1, 3), ("room-002", 2, 8), ("room-003", 3, 20),
+              ("room-012", 12, 14), ("room-033", 33, 4), ("room-045", 45, 25),
+              ("room-055", 55, 13), ("room-068", 68, 13), ("room-069", 69, 25),
+              ("room-078", 78, 27), ("room-080", 80, 11),
           ]
 
           ALLOWED_TENANT_ADDRESSES = {
@@ -155,17 +156,15 @@ jobs:
               raise SystemExit(f"rooms must contain exactly {len(EXPECTED)} fixed cellar rooms.")
 
           clean_rooms = []
-          for index, (expected_id, expected_number) in enumerate(EXPECTED):
+          for index, (expected_id, expected_number, expected_area) in enumerate(EXPECTED):
               room = rooms[index]
               if not isinstance(room, dict) or set(room.keys()) != {"id", "roomNumber", "areaM2", "tenantAddress"}:
                   raise SystemExit(f"Room {index + 1} has missing or unexpected fields.")
               if room["id"] != expected_id or room["roomNumber"] != expected_number:
                   raise SystemExit(f"Room {index + 1} must be fixed room {expected_number}.")
               area = room["areaM2"]
-              if isinstance(area, bool) or not isinstance(area, (int, float)) or not (0 < area <= 250):
-                  raise SystemExit(f"Room {expected_number}: areaM2 must be greater than 0 and no more than 250.")
-              if round(area * 100) != area * 100:
-                  raise SystemExit(f"Room {expected_number}: areaM2 may have at most two decimal places.")
+              if isinstance(area, bool) or not isinstance(area, (int, float)) or area != expected_area:
+                  raise SystemExit(f"Room {expected_number}: area is fixed at {expected_area} m2 and cannot be changed.")
               address = room["tenantAddress"]
               if not isinstance(address, str):
                   raise SystemExit(f"Room {expected_number}: tenantAddress must be text.")
@@ -175,7 +174,7 @@ jobs:
               clean_rooms.append({
                   "id": expected_id,
                   "roomNumber": expected_number,
-                  "areaM2": area,
+                  "areaM2": expected_area,
                   "tenantAddress": address.strip()
               })
 
