@@ -1,5 +1,5 @@
-name: Update test parking data
-run-name: Update test parking data ${{ inputs.request_id }}
+name: Update parking data
+run-name: Update parking data ${{ inputs.request_id }}
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
         type: string
 
 concurrency:
-  group: update-test-parking-data
+  group: update-parking-data
   cancel-in-progress: false
 
 permissions:
@@ -46,6 +46,7 @@ jobs:
           from datetime import datetime
           from pathlib import Path
 
+          EXPECTED_ADDRESSES = json.loads('["Vigerslevvej 148, st.tv", "Vigerslevvej 148, st.mf", "Vigerslevvej 148, st.th", "Vigerslevvej 148, 1.tv", "Vigerslevvej 148, 1.mf", "Vigerslevvej 148, 1.th", "Vigerslevvej 148, 2.tv", "Vigerslevvej 148, 2.mf", "Vigerslevvej 148, 2.th", "Vigerslevvej 146, st.tv", "Vigerslevvej 146, st.th", "Vigerslevvej 146, 1.tv", "Vigerslevvej 146, 1.th", "Vigerslevvej 146, 2.tv", "Vigerslevvej 146, 2.th", "Vigerslevvej 144, st.tv", "Vigerslevvej 144, st.mf", "Vigerslevvej 144, st.th", "Vigerslevvej 144, 1.tv", "Vigerslevvej 144, 1.mf", "Vigerslevvej 144, 1.th", "Vigerslevvej 144, 2.tv", "Vigerslevvej 144, 2.mf", "Vigerslevvej 144, 2.th", "Skyttegaardvej 11, st.tv", "Skyttegaardvej 11, st.mf", "Skyttegaardvej 11, st.th", "Skyttegaardvej 11, 1.tv", "Skyttegaardvej 11, 1.mf", "Skyttegaardvej 11, 1.th", "Skyttegaardvej 11, 2.tv", "Skyttegaardvej 11, 2.mf", "Skyttegaardvej 11, 2.th", "Skyttegaardvej 9, st.tv", "Skyttegaardvej 9, st.th", "Skyttegaardvej 9, 1.tv", "Skyttegaardvej 9, 1.th", "Skyttegaardvej 9, 2.tv", "Skyttegaardvej 9, 2.th", "Skyttegaardvej 7, st.tv", "Skyttegaardvej 7, st.mf", "Skyttegaardvej 7, st.th", "Skyttegaardvej 7, 1.tv", "Skyttegaardvej 7, 1.mf", "Skyttegaardvej 7, 1.th", "Skyttegaardvej 7, 2.tv", "Skyttegaardvej 7, 2.mf", "Skyttegaardvej 7, 2.th", "Skyttegaardvej 5, st.tv", "Skyttegaardvej 5, st.mf", "Skyttegaardvej 5, st.th", "Skyttegaardvej 5, 1.tv", "Skyttegaardvej 5, 1.mf", "Skyttegaardvej 5, 1.th", "Skyttegaardvej 5, 2.tv", "Skyttegaardvej 5, 2.mf", "Skyttegaardvej 5, 2.th", "Skyttegaardvej 3, st.tv", "Skyttegaardvej 3, st.th", "Skyttegaardvej 3, 1.tv", "Skyttegaardvej 3, 1.th", "Skyttegaardvej 3, 2.tv", "Skyttegaardvej 3, 2.th", "Skyttegaardvej 1, st.tv", "Skyttegaardvej 1, st.th", "Skyttegaardvej 1, 1.tv", "Skyttegaardvej 1, 1.th", "Skyttegaardvej 1, 2.tv", "Skyttegaardvej 1, 2.th"]')
           request_id = os.environ.get("REQUEST_ID", "")
           if not re.fullmatch(r"save-[A-Za-z0-9_-]{1,80}", request_id):
               raise SystemExit("Invalid request identifier.")
@@ -53,7 +54,6 @@ jobs:
           raw = os.environ.get("PAYLOAD_JSON", "")
           if not raw or len(raw) > 60000:
               raise SystemExit("Payload is empty or exceeds the 60,000-character safety limit.")
-
           try:
               data = json.loads(raw)
           except json.JSONDecodeError as exc:
@@ -61,7 +61,6 @@ jobs:
 
           if not isinstance(data, dict) or data.get("schemaVersion") != 1:
               raise SystemExit("Unsupported data format: schemaVersion must be 1.")
-
           if set(data.keys()) != {"schemaVersion", "updatedAt", "rows"}:
               raise SystemExit("Unexpected top-level properties in data payload.")
 
@@ -74,15 +73,15 @@ jobs:
               raise SystemExit("updatedAt is not a valid ISO timestamp.")
 
           rows = data.get("rows")
-          if not isinstance(rows, list) or len(rows) > 100:
-              raise SystemExit("rows must be an array with no more than 100 entries.")
+          if not isinstance(rows, list) or len(rows) != len(EXPECTED_ADDRESSES):
+              raise SystemExit(f"rows must contain exactly {len(EXPECTED_ADDRESSES)} fixed addresses.")
 
           clean_rows = []
           seen_ids = set()
+          seen_addresses = set()
           for index, row in enumerate(rows, start=1):
               if not isinstance(row, dict) or set(row.keys()) != {"id", "address", "car", "motorcycle"}:
                   raise SystemExit(f"Row {index} has missing or unexpected fields.")
-
               row_id = row["id"]
               if not isinstance(row_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", row_id):
                   raise SystemExit(f"Row {index} has an invalid id.")
@@ -90,43 +89,53 @@ jobs:
                   raise SystemExit(f"Duplicate row id: {row_id}")
               seen_ids.add(row_id)
 
-              clean = {"id": row_id}
-              for key, maximum, required in (("address", 120, True), ("car", 80, False), ("motorcycle", 80, False)):
+              address = row["address"]
+              if not isinstance(address, str) or address != EXPECTED_ADDRESSES[index - 1]:
+                  raise SystemExit(f"Row {index} must be the fixed address {EXPECTED_ADDRESSES[index - 1]}.")
+              if address in seen_addresses:
+                  raise SystemExit(f"Duplicate address: {address}")
+              seen_addresses.add(address)
+
+              clean = {"id": row_id, "address": address}
+              for key in ("car", "motorcycle"):
                   value = row[key]
                   if not isinstance(value, str):
                       raise SystemExit(f"Row {index}: {key} must be text.")
                   value = value.strip()
-                  if len(value) > maximum:
-                      raise SystemExit(f"Row {index}: {key} is longer than {maximum} characters.")
-                  if required and not value:
-                      raise SystemExit(f"Row {index}: address is required.")
-                  if any(ord(char) < 32 and char not in "\\t" for char in value):
+                  if len(value) > 80:
+                      raise SystemExit(f"Row {index}: {key} is longer than 80 characters.")
+                  if any(ord(char) < 32 and char not in "\t" for char in value):
                       raise SystemExit(f"Row {index}: {key} contains a control character.")
+                  if value:
+                      is_date = re.fullmatch(r"\d{2}/\d{2}/\d{4}", value) is not None
+                      is_plate = re.fullmatch(r"[A-ZÆØÅ]{2}\s?-?\s?\d{5}", value, re.IGNORECASE) is not None
+                      if not (is_date or is_plate):
+                          raise SystemExit(f"Row {index}: {key} must be blank, a date in DD/MM/YYYY format, or a Danish registration number.")
+                      if is_date:
+                          try:
+                              datetime.strptime(value, "%d/%m/%Y")
+                          except ValueError:
+                              raise SystemExit(f"Row {index}: {key} contains an invalid date.")
                   clean[key] = value
               clean_rows.append(clean)
 
-          normalized = {
-              "schemaVersion": 1,
-              "updatedAt": updated_at,
-              "rows": clean_rows,
-          }
-
-          destination = Path("testparkeringside/data.json")
+          normalized = {"schemaVersion": 1, "updatedAt": updated_at, "rows": clean_rows}
+          destination = Path("parkering/data.json")
           destination.parent.mkdir(parents=True, exist_ok=True)
-          temporary = Path("testparkeringside/data.json.tmp")
+          temporary = Path("parkering/data.json.tmp")
           temporary.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           temporary.replace(destination)
-          print(f"Validated and prepared {destination}. No other file is written by this step.")
+          print(f"Validated {len(clean_rows)} fixed addresses. Only {destination} is written.")
           PY
 
-      - name: Commit only testparkeringside/data.json
+      - name: Commit only parkering/data.json
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- testparkeringside/data.json
+          git add -- parkering/data.json
           if git diff --cached --quiet; then
             echo "No data changes to commit."
             exit 0
           fi
-          git commit -m "Update test parking data"
+          git commit -m "Update parking data"
           git push origin "HEAD:${GITHUB_REF_NAME}"
