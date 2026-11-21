@@ -2,7 +2,11 @@
 
 Dette repository indeholder testdata og den GitHub Actions-workflow, som bestyrelsens administrationsside bruger til at gemme ændringer.
 
-Repositoryet er adskilt fra hjemmesidens repository `MalikQayum/Hjemmeside`.
+Repositoryet ejes af organisationen `Vigerslev-Skyttegard` og er adskilt fra begge hjemmeside-repositories:
+
+- Officiel hjemmeside: `Vigerslev-Skyttegard/Hjemmeside`
+- Personlig fork til udvikling og pull requests: `MalikQayum/Hjemmeside`
+- Separat datarepository: `Vigerslev-Skyttegard/bestyrelsen`
 
 ## Indhold
 
