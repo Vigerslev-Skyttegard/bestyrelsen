@@ -38,7 +38,7 @@ Der er **ikke** en `testparkeringside/data.json` i hjemmesidens `testparkeringsi
 
    Hvis GitHubs web-upload ikke tager den skjulte `.github`-mappe med, så opret filen manuelt via **Add file → Create new file** og angiv stien `.github/workflows/update-data.yml`. Kopiér indholdet fra ZIP-pakken.
 
-5. Du skal **ikke** aktivere GitHub Pages for `bestyrelsen`. Hjemmesiden læser data direkte fra den offentlige `testparkeringside/data.json`-fil.
+5. Du skal **ikke** aktivere GitHub Pages for `bestyrelsen`. Hjemmesiden læser data fra GitHubs offentlige REST Contents API med raw-medietypen. Det mindsker ventetid på ændringer sammenlignet med `raw.githubusercontent.com`, hvor GitHubs CDN kan vise en tidligere version kort tid efter et commit.
 6. Åbn repositoryets **Settings → Actions → General**. Kontrollér, at GitHub Actions er tilladt. Under **Workflow permissions** vælges **Read and write permissions**, så workflowets egen midlertidige `GITHUB_TOKEN` må opdatere datafilen.
 7. Kontrollér, at workflowet `Update test parking data` vises under fanen **Actions**.
 
@@ -145,7 +145,7 @@ Tokenen gemmes ikke i `localStorage` eller `sessionStorage`. Den findes kun i ad
 | Gemning viser 403 | Kontrollér `Actions: Read and write`, Resource owner `Vigerslev-Skyttegard`, repositorybegrænsning til `bestyrelsen` og eventuel organisationsgodkendelse. |
 | Workflow starter ikke | GitHub Actions er aktiveret, og workflowfilen ligger på standardbranchen `main`. |
 | Workflow fejler ved push | `Settings → Actions → General → Workflow permissions` tillader `Read and write permissions`. Se fejl under Actions. |
-| Testtabellen kan ikke hente data | `bestyrelsen` er offentligt, `testparkeringside/data.json` ligger i repositoryets rod, og branch hedder `main`. |
+| Testtabellen kan ikke hente data | `bestyrelsen` er offentligt, `testparkeringside/data.json` ligger i repositoryets rod, og branch hedder `main`. GitHub API kan midlertidigt rate-limit offentlige forespørgsler; prøv igen lidt senere. |
 
 ## Officiel GitHub-dokumentation
 
@@ -155,3 +155,9 @@ Tokenen gemmes ikke i `localStorage` eller `sessionStorage`. Den findes kun i ad
 - [Fine-grained token permissions](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens)
 - [Organization approval of fine-grained tokens](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/managing-requests-for-personal-access-tokens-in-your-organization)
 - [GitHub Actions workflow permissions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)
+
+### Bemærkning om cache og opdatering af data
+
+Testparkeringssiden bruger GitHubs REST Contents API (`api.github.com/repos/.../contents/...`) i stedet for `raw.githubusercontent.com`. Den rå filserver kan vise en cachet, ældre udgave kort tid efter et nyt commit. Contents API returnerer filens indhold via `application/vnd.github.raw+json` og kan læse offentlige filer uden token. Siden bruger også `cache: "no-store"` og et unikt query-parameter. Den opdaterer data ved indlæsning og når fanen bliver aktiv igen efter mindst 15 sekunder i baggrunden. Der er ikke indført konstant polling, så siden ikke bruger unødige API-kald.
+
+GitHubs offentlige REST API har en begrænsning for anonyme forespørgsler (typisk 60 pr. time pr. offentlig IP). For en lille foreningsside, der henter den lille datafil ved indlæsning, bør det normalt være tilstrækkeligt.
