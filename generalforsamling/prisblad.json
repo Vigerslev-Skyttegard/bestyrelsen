@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T06:56:12Z",
+  "updatedAt": "2026-11-21T23:36:20.290Z",
   "rows": [
     {
       "id": "price-001",
       "title": "Køb af nøglekort eller nøglebrikker",
       "description": "Ekstra eller erstatningsbrikker til opgangsdøre",
-      "amount": 100,
+      "amount": 500,
       "unit": ""
     },
     {
