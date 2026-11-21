@@ -1,4 +1,5 @@
 name: Update test parking data
+run-name: Update test parking data ${{ inputs.request_id }}
 
 on:
   workflow_dispatch:
@@ -7,15 +8,17 @@ on:
         description: JSON data sent by the board administration page
         required: true
         type: string
-      validate_only:
-        description: Validate access and payload without changing data.json
+      request_id:
+        description: Unique identifier used by the administration page to track this save
         required: true
-        default: false
-        type: boolean
+        type: string
 
 concurrency:
   group: update-test-parking-data
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   update-data:
@@ -34,15 +37,18 @@ jobs:
       - name: Validate incoming JSON and write the one permitted file
         env:
           PAYLOAD_JSON: ${{ inputs.payload }}
-          VALIDATE_ONLY: ${{ inputs.validate_only }}
+          REQUEST_ID: ${{ inputs.request_id }}
         run: |
           python3 <<'PY'
           import json
           import os
           import re
-          import sys
           from datetime import datetime
           from pathlib import Path
+
+          request_id = os.environ.get("REQUEST_ID", "")
+          if not re.fullmatch(r"save-[A-Za-z0-9_-]{1,80}", request_id):
+              raise SystemExit("Invalid request identifier.")
 
           raw = os.environ.get("PAYLOAD_JSON", "")
           if not raw or len(raw) > 60000:
@@ -60,13 +66,12 @@ jobs:
               raise SystemExit("Unexpected top-level properties in data payload.")
 
           updated_at = data.get("updatedAt")
-          if updated_at is not None:
-              if not isinstance(updated_at, str):
-                  raise SystemExit("updatedAt must be an ISO timestamp or null.")
-              try:
-                  datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
-              except ValueError:
-                  raise SystemExit("updatedAt is not a valid ISO timestamp.")
+          if not isinstance(updated_at, str):
+              raise SystemExit("updatedAt must be an ISO timestamp.")
+          try:
+              datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+          except ValueError:
+              raise SystemExit("updatedAt is not a valid ISO timestamp.")
 
           rows = data.get("rows")
           if not isinstance(rows, list) or len(rows) > 100:
@@ -95,7 +100,7 @@ jobs:
                       raise SystemExit(f"Row {index}: {key} is longer than {maximum} characters.")
                   if required and not value:
                       raise SystemExit(f"Row {index}: address is required.")
-                  if any(ord(char) < 32 and char not in "\t" for char in value):
+                  if any(ord(char) < 32 and char not in "\\t" for char in value):
                       raise SystemExit(f"Row {index}: {key} contains a control character.")
                   clean[key] = value
               clean_rows.append(clean)
@@ -106,11 +111,6 @@ jobs:
               "rows": clean_rows,
           }
 
-          validate_only = os.environ.get("VALIDATE_ONLY", "false").lower() == "true"
-          if validate_only:
-              print(f"Validation successful. {len(clean_rows)} example rows checked; data.json was not changed.")
-              sys.exit(0)
-
           destination = Path("testparkeringside/data.json")
           destination.parent.mkdir(parents=True, exist_ok=True)
           temporary = Path("testparkeringside/data.json.tmp")
@@ -120,7 +120,6 @@ jobs:
           PY
 
       - name: Commit only testparkeringside/data.json
-        if: ${{ inputs.validate_only != true }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
