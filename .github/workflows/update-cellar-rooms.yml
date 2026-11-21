@@ -1,0 +1,127 @@
+name: Update cellar room data
+run-name: Update cellar rooms ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: JSON cellar-room data sent by the board administration page
+        required: true
+        type: string
+      request_id:
+        description: Unique identifier used by the administration page to track this save
+        required: true
+        type: string
+
+concurrency:
+  group: update-bestyrelsen-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-cellar-rooms:
+    name: Validate and update kaelderrum/data.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Validate cellar-room data and write the one permitted file
+        env:
+          PAYLOAD_JSON: ${{ inputs.payload }}
+          REQUEST_ID: ${{ inputs.request_id }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          from datetime import datetime
+          from pathlib import Path
+
+          EXPECTED = [
+              ("room-001", 1), ("room-002", 2), ("room-003", 3),
+              ("room-012", 12), ("room-033", 33), ("room-045", 45),
+              ("room-055", 55), ("room-068", 68), ("room-069", 69),
+              ("room-078", 78), ("room-080", 80),
+          ]
+
+          request_id = os.environ.get("REQUEST_ID", "")
+          if not re.fullmatch(r"save-[A-Za-z0-9_-]{1,80}", request_id):
+              raise SystemExit("Invalid request identifier.")
+
+          raw = os.environ.get("PAYLOAD_JSON", "")
+          if not raw or len(raw) > 20000:
+              raise SystemExit("Payload is empty or exceeds the 20,000-character safety limit.")
+          try:
+              data = json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"Invalid JSON payload: {exc}")
+
+          if not isinstance(data, dict) or data.get("schemaVersion") != 1:
+              raise SystemExit("Unsupported cellar-room data format.")
+          if set(data.keys()) != {"schemaVersion", "updatedAt", "rooms"}:
+              raise SystemExit("Unexpected top-level properties in cellar-room payload.")
+          updated_at = data.get("updatedAt")
+          if not isinstance(updated_at, str):
+              raise SystemExit("updatedAt must be an ISO timestamp.")
+          try:
+              datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+          except ValueError:
+              raise SystemExit("updatedAt is not a valid ISO timestamp.")
+
+          rooms = data.get("rooms")
+          if not isinstance(rooms, list) or len(rooms) != len(EXPECTED):
+              raise SystemExit(f"rooms must contain exactly {len(EXPECTED)} fixed cellar rooms.")
+
+          clean_rooms = []
+          for index, (expected_id, expected_number) in enumerate(EXPECTED):
+              room = rooms[index]
+              if not isinstance(room, dict) or set(room.keys()) != {"id", "roomNumber", "areaM2", "tenantAddress"}:
+                  raise SystemExit(f"Room {index + 1} has missing or unexpected fields.")
+              if room["id"] != expected_id or room["roomNumber"] != expected_number:
+                  raise SystemExit(f"Room {index + 1} must be fixed room {expected_number}.")
+              area = room["areaM2"]
+              if isinstance(area, bool) or not isinstance(area, (int, float)) or not (0 < area <= 250):
+                  raise SystemExit(f"Room {expected_number}: areaM2 must be greater than 0 and no more than 250.")
+              if round(area * 100) != area * 100:
+                  raise SystemExit(f"Room {expected_number}: areaM2 may have at most two decimal places.")
+              address = room["tenantAddress"]
+              if not isinstance(address, str) or len(address) > 120:
+                  raise SystemExit(f"Room {expected_number}: tenantAddress must be text up to 120 characters.")
+              if any(ord(char) < 32 and char not in "\t\n\r" for char in address):
+                  raise SystemExit(f"Room {expected_number}: tenantAddress contains a control character.")
+              clean_rooms.append({
+                  "id": expected_id,
+                  "roomNumber": expected_number,
+                  "areaM2": area,
+                  "tenantAddress": address.strip()
+              })
+
+          normalized = {"schemaVersion": 1, "updatedAt": updated_at, "rooms": clean_rooms}
+          destination = Path("kaelderrum/data.json")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          temporary = Path("kaelderrum/data.json.tmp")
+          temporary.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          temporary.replace(destination)
+          print(f"Validated {len(clean_rooms)} fixed cellar rooms. Only {destination} is written.")
+          PY
+
+      - name: Commit only kaelderrum/data.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- kaelderrum/data.json
+          if git diff --cached --quiet; then
+            echo "No cellar-room changes to commit."
+            exit 0
+          fi
+          git commit -m "Update cellar room data"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
