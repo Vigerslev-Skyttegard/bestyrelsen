@@ -85,7 +85,7 @@ Der skal ikke ændres i den eksisterende `/parkering/`-side, dens navigation, ek
 
 ## Del 3 – Opret adgangsnøglen til bestyrelsen
 
-Adgangsnøglen er en **Fine-grained Personal Access Token**. Den oprettes fra din GitHub-bruger, men den skal have organisationen `Vigerslev-Skyttegard` som Resource owner. Den får ikke direkte skriverettighed til repositoryets filer.
+Adgangsnøglen er en **Fine-grained Personal Access Token**. Den oprettes fra GitHub-kontoen `MalikQayum`, fordi administrationssiden kontrollerer, at tokenens ejerkonto netop er `MalikQayum`. Tokenen skal have organisationen `Vigerslev-Skyttegard` som Resource owner. Den får ikke direkte skriverettighed til repositoryets filer.
 
 1. Gå til [GitHub – Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new).
 2. Vælg et navn, f.eks. `Bestyrelsen – testparkering`.
@@ -112,13 +112,15 @@ Adgangsnøglen er en **Fine-grained Personal Access Token**. Den oprettes fra di
 
 1. Åbn [Bestyrelsens administration](https://www.skyttegaardvej.dk/bestyrelsen/).
 2. Brugernavn: **`bestyrelsen`**.
-3. Indsæt Fine-grained tokenen i feltet Adgangskode.
-4. Tryk **Log ind**. Siden starter først et validerings-workflow, som kontrollerer adgangen uden at ændre `testparkeringside/data.json`.
+3. Indsæt Fine-grained tokenen i feltet GitHub-adgangsnøgle.
+4. Tryk **Log ind**. Siden kontrollerer tokenen direkte hos GitHub via `GET /user` og bekræfter, at den tilhører `MalikQayum`. Der startes ikke et workflow ved login, så kontrollen bør være hurtig.
 5. Når du er logget ind, kan du tilføje, redigere og slette rækker.
-6. Tryk **Gem ændringer**. Siden starter workflowet, som validerer indholdet og opdaterer `testparkeringside/data.json`.
-7. Kontrollér commit og eventuelle fejl under [Actions i bestyrelsen-repositoryet](https://github.com/Vigerslev-Skyttegard/bestyrelsen/actions).
+6. Tryk **Gem ændringer**. Først nu startes workflowet, som validerer indholdet og opdaterer `testparkeringside/data.json`.
+7. GitHubs aktuelle API svarer normalt på workflow-dispatch med HTTP 200 og et `workflow_run_id`. Siden bruger dette ID til at følge den konkrete kørsel; en reservevej finder kørslen via et unikt `request_id`, hvis API-svaret ikke indeholder et ID.
 8. Åbn [testparkeringssiden](https://www.skyttegaardvej.dk/testparkeringside/) for at se de opdaterede testdata.
 9. Tryk **Log ud**, når du er færdig.
+
+Bemærk: Login bekræfter, at tokenen er gyldig og tilhører den forventede GitHub-konto. Det kan ikke på forhånd bevise, at tokenen har `Actions: write`, uden at starte et workflow. Den konkrete Actions-adgang afprøves derfor først ved første gemning.
 
 Tokenen gemmes ikke i `localStorage` eller `sessionStorage`. Den findes kun i administrationssidens hukommelse, mens den er åben. Luk siden eller log ud efter brug.
 
@@ -138,8 +140,9 @@ Tokenen gemmes ikke i `localStorage` eller `sessionStorage`. Den findes kun i ad
 | Problem | Kontrollér |
 |---|---|
 | Login viser 401 | Tokenen er kopieret korrekt og stadig aktiv. |
-| Login viser 403 | Tokenen har `Actions: Read and write`, Resource owner er `Vigerslev-Skyttegard`, og tokenen er eventuelt godkendt af organisationen. |
-| Login viser 404 | Repositoryet hedder præcis `Vigerslev-Skyttegard/bestyrelsen`, workflowet ligger i `.github/workflows/update-data.yml`, og det ligger på `main`. |
+| Login viser 403 | Kontrollér, at tokenen ikke er udløbet/tilbagekaldt, at organisationen har godkendt tokenen, og at GitHub ikke midlertidigt rate-limiter kontoen. |
+| Gemning viser 404 | Kontrollér, at repositoryet hedder præcis `Vigerslev-Skyttegard/bestyrelsen`, og at workflowet ligger i `.github/workflows/update-data.yml` på `main`. |
+| Gemning viser 403 | Kontrollér `Actions: Read and write`, Resource owner `Vigerslev-Skyttegard`, repositorybegrænsning til `bestyrelsen` og eventuel organisationsgodkendelse. |
 | Workflow starter ikke | GitHub Actions er aktiveret, og workflowfilen ligger på standardbranchen `main`. |
 | Workflow fejler ved push | `Settings → Actions → General → Workflow permissions` tillader `Read and write permissions`. Se fejl under Actions. |
 | Testtabellen kan ikke hente data | `bestyrelsen` er offentligt, `testparkeringside/data.json` ligger i repositoryets rod, og branch hedder `main`. |
@@ -147,7 +150,8 @@ Tokenen gemmes ikke i `localStorage` eller `sessionStorage`. Den findes kun i ad
 ## Officiel GitHub-dokumentation
 
 - [Create a workflow dispatch event – kræver Actions: write](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event)
-- [Get a workflow run – kræver Actions: read](https://docs.github.com/en/rest/actions/workflow-runs#get-a-workflow-run)
+- [Get the authenticated user – Fine-grained PAT kræver ingen ekstra user-permissions](https://docs.github.com/en/rest/users/users#get-the-authenticated-user)
+- [List workflow runs – kræver Actions: read](https://docs.github.com/en/rest/actions/workflow-runs#list-workflow-runs-for-a-workflow)
 - [Fine-grained token permissions](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens)
 - [Organization approval of fine-grained tokens](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/managing-requests-for-personal-access-tokens-in-your-organization)
 - [GitHub Actions workflow permissions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)
