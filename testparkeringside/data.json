@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T01:55:00.662Z",
+  "updatedAt": "2026-11-21T01:58:00.119Z",
   "rows": [
     {
       "id": "test-row-1",
@@ -23,6 +23,12 @@
     {
       "id": "test-4fc7e617-7a8a-442a-aa5d-49c4acdc6938",
       "address": "Vigerslevvej 148",
+      "car": "ab123456",
+      "motorcycle": ""
+    },
+    {
+      "id": "test-a168297d-6abd-489b-bc14-8efe6b655a6c",
+      "address": "Vigerslevvej 148, 1. tv",
       "car": "ab123456",
       "motorcycle": ""
     }
