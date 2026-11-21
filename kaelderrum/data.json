@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T06:20:58Z",
+  "updatedAt": "2026-11-21T23:38:00.223Z",
   "rooms": [
     {
       "id": "room-001",
@@ -30,7 +30,7 @@
       "id": "room-033",
       "roomNumber": 33,
       "areaM2": 4,
-      "tenantAddress": ""
+      "tenantAddress": "Vigerslevvej 148, 1.tv"
     },
     {
       "id": "room-045",
