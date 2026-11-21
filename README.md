@@ -28,6 +28,18 @@ Bestyrelsen kan tilføje, redigere og slette prisrækker via administrationsside
 Workflow: `.github/workflows/update-price-list.yml`.
 Det validerer prislisten og skriver **kun** `generalforsamling/prisblad.json`.
 
+
+## Kælderrum
+
+`kaelderrum/data.json` indeholder de 11 faste kælderrum med lokalenummer, areal i m² og lejeradresse. En tom lejeradresse betyder, at lokalet vises som ledigt; en udfyldt adresse (fx `Ekstern`) betyder, at lokalet vises som udlejet.
+
+Månedlig leje beregnes på hjemmesiden som `areaM2 ×` prisen i prisposten `price-008` (`Leje af kælderrum`) i `generalforsamling/prisblad.json`. Kvadratmeterprisen redigeres centralt via prisbladet på `/bestyrelsen/` og gemmes ikke separat i kælderrumsdataene.
+
+Bestyrelsen kan redigere lejeradresse og m² via administrationssiden `/bestyrelsen/`. De 11 lokalenumre er faste.
+
+Workflow: `.github/workflows/update-cellar-rooms.yml`.
+Det validerer kælderrumsdataene og skriver **kun** `kaelderrum/data.json`.
+
 ## Sikkerhed og adgang
 
 Administrationssiden bruger en GitHub Fine-grained Personal Access Token med adgang til dette repository og `Actions: Read and write`, men uden `Contents: Write`. De to workflows har hver deres særskilte validering og skriver kun til deres egen datafil med deres egen begrænsede `GITHUB_TOKEN`. De deler en fælles concurrency-gruppe, så samtidige gemninger ikke forsøger at pushe til `main` på samme tid.
