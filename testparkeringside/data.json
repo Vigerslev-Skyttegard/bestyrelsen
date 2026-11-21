@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T03:04:45Z",
+  "updatedAt": "2026-11-21T03:17:37.362Z",
   "rows": [
     {
       "id": "apt-001",
@@ -413,8 +413,8 @@
     {
       "id": "apt-069",
       "address": "Skyttegaardvej 1, 2.th",
-      "car": "",
-      "motorcycle": "ER47723"
+      "car": "ER47723",
+      "motorcycle": ""
     }
   ]
 }
