@@ -1,35 +1,419 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T01:58:00.119Z",
+  "updatedAt": null,
   "rows": [
     {
-      "id": "test-row-1",
-      "address": "TESTADRESSE 1, 1. th",
-      "car": "TEST-BIL-01",
-      "motorcycle": ""
-    },
-    {
-      "id": "test-row-2",
-      "address": "TESTADRESSE 2, 2. tv",
-      "car": "På test-venteliste",
-      "motorcycle": "TEST-MC-01"
-    },
-    {
-      "id": "test-row-3",
-      "address": "TESTADRESSE 3, st. th",
+      "id": "apt-001",
+      "address": "Vigerslevvej 148, st.tv",
       "car": "",
-      "motorcycle": "På test-venteliste"
-    },
-    {
-      "id": "test-4fc7e617-7a8a-442a-aa5d-49c4acdc6938",
-      "address": "Vigerslevvej 148",
-      "car": "ab123456",
       "motorcycle": ""
     },
     {
-      "id": "test-a168297d-6abd-489b-bc14-8efe6b655a6c",
-      "address": "Vigerslevvej 148, 1. tv",
-      "car": "ab123456",
+      "id": "apt-002",
+      "address": "Vigerslevvej 148, st.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-003",
+      "address": "Vigerslevvej 148, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-004",
+      "address": "Vigerslevvej 148, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-005",
+      "address": "Vigerslevvej 148, 1.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-006",
+      "address": "Vigerslevvej 148, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-007",
+      "address": "Vigerslevvej 148, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-008",
+      "address": "Vigerslevvej 148, 2.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-009",
+      "address": "Vigerslevvej 148, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-010",
+      "address": "Vigerslevvej 146, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-011",
+      "address": "Vigerslevvej 146, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-012",
+      "address": "Vigerslevvej 146, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-013",
+      "address": "Vigerslevvej 146, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-014",
+      "address": "Vigerslevvej 146, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-015",
+      "address": "Vigerslevvej 146, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-016",
+      "address": "Vigerslevvej 144, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-017",
+      "address": "Vigerslevvej 144, st.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-018",
+      "address": "Vigerslevvej 144, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-019",
+      "address": "Vigerslevvej 144, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-020",
+      "address": "Vigerslevvej 144, 1.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-021",
+      "address": "Vigerslevvej 144, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-022",
+      "address": "Vigerslevvej 144, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-023",
+      "address": "Vigerslevvej 144, 2.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-024",
+      "address": "Vigerslevvej 144, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-025",
+      "address": "Skyttegaardvej 11, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-026",
+      "address": "Skyttegaardvej 11, st.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-027",
+      "address": "Skyttegaardvej 11, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-028",
+      "address": "Skyttegaardvej 11, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-029",
+      "address": "Skyttegaardvej 11, 1.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-030",
+      "address": "Skyttegaardvej 11, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-031",
+      "address": "Skyttegaardvej 11, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-032",
+      "address": "Skyttegaardvej 11, 2.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-033",
+      "address": "Skyttegaardvej 11, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-034",
+      "address": "Skyttegaardvej 9, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-035",
+      "address": "Skyttegaardvej 9, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-036",
+      "address": "Skyttegaardvej 9, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-037",
+      "address": "Skyttegaardvej 9, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-038",
+      "address": "Skyttegaardvej 9, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-039",
+      "address": "Skyttegaardvej 9, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-040",
+      "address": "Skyttegaardvej 7, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-041",
+      "address": "Skyttegaardvej 7, st.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-042",
+      "address": "Skyttegaardvej 7, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-043",
+      "address": "Skyttegaardvej 7, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-044",
+      "address": "Skyttegaardvej 7, 1.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-045",
+      "address": "Skyttegaardvej 7, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-046",
+      "address": "Skyttegaardvej 7, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-047",
+      "address": "Skyttegaardvej 7, 2.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-048",
+      "address": "Skyttegaardvej 7, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-049",
+      "address": "Skyttegaardvej 5, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-050",
+      "address": "Skyttegaardvej 5, st.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-051",
+      "address": "Skyttegaardvej 5, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-052",
+      "address": "Skyttegaardvej 5, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-053",
+      "address": "Skyttegaardvej 5, 1.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-054",
+      "address": "Skyttegaardvej 5, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-055",
+      "address": "Skyttegaardvej 5, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-056",
+      "address": "Skyttegaardvej 5, 2.mf",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-057",
+      "address": "Skyttegaardvej 5, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-058",
+      "address": "Skyttegaardvej 3, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-059",
+      "address": "Skyttegaardvej 3, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-060",
+      "address": "Skyttegaardvej 3, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-061",
+      "address": "Skyttegaardvej 3, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-062",
+      "address": "Skyttegaardvej 3, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-063",
+      "address": "Skyttegaardvej 3, 2.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-064",
+      "address": "Skyttegaardvej 1, st.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-065",
+      "address": "Skyttegaardvej 1, st.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-066",
+      "address": "Skyttegaardvej 1, 1.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-067",
+      "address": "Skyttegaardvej 1, 1.th",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-068",
+      "address": "Skyttegaardvej 1, 2.tv",
+      "car": "",
+      "motorcycle": ""
+    },
+    {
+      "id": "apt-069",
+      "address": "Skyttegaardvej 1, 2.th",
+      "car": "",
       "motorcycle": ""
     }
   ]
