@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-21T05:13:46Z",
+  "rows": [
+    {
+      "id": "price-001",
+      "title": "Køb af nøglekort eller nøglebrikker",
+      "description": "Ekstra eller erstatningsbrikker til opgangsdøre",
+      "amount": 100,
+      "unit": ""
+    },
+    {
+      "id": "price-002",
+      "title": "Leje af parkeringsplads til bil",
+      "description": "Månedlig leje via venteliste (administreres af bestyrelsen)",
+      "amount": 100,
+      "unit": "/ md."
+    },
+    {
+      "id": "price-003",
+      "title": "Leje af parkeringsplads til motorcykel",
+      "description": "Månedlig leje via venteliste",
+      "amount": 50,
+      "unit": "/ md."
+    },
+    {
+      "id": "price-004",
+      "title": "Nye navneskilte ved udlejning",
+      "description": "Montering af autoriserede navneskilte på dørtelefon og postkasse",
+      "amount": 500,
+      "unit": ""
+    },
+    {
+      "id": "price-005",
+      "title": "Fjernelse og afrensning af klistermærker",
+      "description": "På dørtelefon eller postkasse ved overtrædelse af husorden",
+      "amount": 500,
+      "unit": ""
+    },
+    {
+      "id": "price-006",
+      "title": "Bortskaffelse af ureglementeret affald",
+      "description": "Affald henstillet uden for affaldscontainere eller storskraldrum",
+      "amount": 500,
+      "unit": ""
+    },
+    {
+      "id": "price-007",
+      "title": "Selvrisiko ved selvforskyldt skade",
+      "description": "Ved skader dækket af ejendommens bygningsforsikring",
+      "amount": 5000,
+      "unit": ""
+    }
+  ]
+}
