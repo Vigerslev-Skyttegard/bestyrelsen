@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T05:45:16.078Z",
+  "updatedAt": "2026-11-21T06:56:12Z",
   "rows": [
     {
       "id": "price-001",
@@ -50,6 +50,13 @@
       "description": "Ved skader dækket af ejendommens bygningsforsikring",
       "amount": 5000,
       "unit": ""
+    },
+    {
+      "id": "price-008",
+      "title": "Leje af kælderrum",
+      "description": "Månedlig leje beregnes efter rummets faste areal.",
+      "amount": 20,
+      "unit": "/ m² / md."
     }
   ]
 }
