@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": null,
+  "updatedAt": "2026-11-21T01:36:27.298Z",
   "rows": [
     {
       "id": "test-row-1",
@@ -19,6 +19,12 @@
       "address": "TESTADRESSE 3, st. th",
       "car": "",
       "motorcycle": "På test-venteliste"
+    },
+    {
+      "id": "test-faeb3673-d6b6-431c-8d64-ca4b60dc2af6",
+      "address": "Vigerslevvej 148",
+      "car": "ab123456",
+      "motorcycle": ""
     }
   ]
 }
