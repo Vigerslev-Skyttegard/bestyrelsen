@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21T03:17:37.362Z",
+  "updatedAt": "2026-11-21T03:44:00.771Z",
   "rows": [
     {
       "id": "apt-001",
@@ -23,7 +23,7 @@
     {
       "id": "apt-004",
       "address": "Vigerslevvej 148, 1.tv",
-      "car": "19/11/2026",
+      "car": "",
       "motorcycle": "EW45373"
     },
     {
