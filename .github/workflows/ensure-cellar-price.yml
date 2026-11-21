@@ -1,0 +1,136 @@
+name: Ensure cellar room price exists
+run-name: Ensure cellar room price exists
+
+on:
+  # Uploading/updating this workflow triggers the repair automatically on main.
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/ensure-cellar-price.yml
+  # Manual retry remains available from the Actions tab.
+  workflow_dispatch:
+
+concurrency:
+  group: update-bestyrelsen-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ensure-cellar-price:
+    name: Add or normalize the cellar room price without changing other prices
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Ensure the cellar price row exists
+        run: |
+          python3 <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          destination = Path("generalforsamling/prisblad.json")
+          if not destination.is_file():
+              raise SystemExit("Missing generalforsamling/prisblad.json. No files were changed.")
+
+          try:
+              data = json.loads(destination.read_text(encoding="utf-8"))
+          except (OSError, json.JSONDecodeError) as exc:
+              raise SystemExit(f"Could not read the existing price list: {exc}")
+
+          if not isinstance(data, dict) or data.get("schemaVersion") != 1 or not isinstance(data.get("rows"), list):
+              raise SystemExit("Unsupported price-list format. No files were changed.")
+
+          rows = data["rows"]
+          if len(rows) > 100:
+              raise SystemExit("The price list contains more than 100 rows. No files were changed.")
+
+          target_id = "price-008"
+          target_title = "Leje af kælderrum"
+          target_title_key = target_title.casefold()
+
+          id_matches = [row for row in rows if isinstance(row, dict) and row.get("id") == target_id]
+          title_matches = [
+              row for row in rows
+              if isinstance(row, dict)
+              and isinstance(row.get("title"), str)
+              and row["title"].strip().casefold() == target_title_key
+          ]
+
+          if len(id_matches) > 1 or len(title_matches) > 1:
+              raise SystemExit("More than one cellar-room price entry was found. Resolve duplicate rows manually; no files were changed.")
+
+          if id_matches and title_matches and id_matches[0] is not title_matches[0]:
+              raise SystemExit("price-008 and the cellar-room title refer to different rows. Resolve this manually; no files were changed.")
+
+          changed = False
+          existing = id_matches[0] if id_matches else (title_matches[0] if title_matches else None)
+
+          if existing is None:
+              rows.append({
+                  "id": target_id,
+                  "title": target_title,
+                  "description": "Månedlig leje beregnes efter rummets faste areal.",
+                  "amount": 20,
+                  "unit": "/ m² / md."
+              })
+              changed = True
+              print("Added missing cellar-room price at 20 kr. per m² per month.")
+          else:
+              amount = existing.get("amount")
+              if isinstance(amount, bool) or not isinstance(amount, int) or amount < 0 or amount > 1_000_000:
+                  raise SystemExit("The existing cellar-room price has an invalid amount. No files were changed.")
+
+              # If it already exists by title but has an automatically generated ID,
+              # assign the stable ID expected by the public cellar-room page.
+              if existing.get("id") != target_id:
+                  old_id = existing.get("id")
+                  if any(isinstance(row, dict) and row is not existing and row.get("id") == target_id for row in rows):
+                      raise SystemExit("Cannot normalize the cellar price ID because price-008 is already in use.")
+                  existing["id"] = target_id
+                  changed = True
+                  print(f"Normalized cellar price ID from {old_id!r} to {target_id!r}.")
+
+              if existing.get("title") != target_title:
+                  existing["title"] = target_title
+                  changed = True
+              if not isinstance(existing.get("description"), str) or not existing.get("description", "").strip():
+                  existing["description"] = "Månedlig leje beregnes efter rummets faste areal."
+                  changed = True
+              if not isinstance(existing.get("unit"), str) or not existing.get("unit", "").strip():
+                  existing["unit"] = "/ m² / md."
+                  changed = True
+
+              print(f"Cellar-room price is present at {amount} kr. per m² per month; the amount was preserved.")
+
+          if changed:
+              data["updatedAt"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+              temporary = destination.with_suffix(".json.tmp")
+              temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+              temporary.replace(destination)
+              print(f"Updated only {destination}; all other price rows and amounts were preserved.")
+          else:
+              print("No changes needed. The existing price list was left untouched.")
+          PY
+
+      - name: Commit only the price list if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- generalforsamling/prisblad.json
+          if git diff --cached --quiet; then
+            echo "No price-list change was needed."
+            exit 0
+          fi
+          git commit -m "Ensure cellar room price is available"
+          git push origin "HEAD:main"
