@@ -1,0 +1,133 @@
+name: Update general meeting price list
+run-name: Update price list ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: JSON price list sent by the board administration page
+        required: true
+        type: string
+      request_id:
+        description: Unique identifier used by the administration page to track this save
+        required: true
+        type: string
+
+concurrency:
+  group: update-bestyrelsen-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-price-list:
+    name: Validate and update prisblad.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Validate incoming price list and write the one permitted file
+        env:
+          PAYLOAD_JSON: ${{ inputs.payload }}
+          REQUEST_ID: ${{ inputs.request_id }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          from datetime import datetime
+          from pathlib import Path
+
+          request_id = os.environ.get("REQUEST_ID", "")
+          if not re.fullmatch(r"save-[A-Za-z0-9_-]{1,80}", request_id):
+              raise SystemExit("Invalid request identifier.")
+
+          raw = os.environ.get("PAYLOAD_JSON", "")
+          if not raw or len(raw) > 30000:
+              raise SystemExit("Payload is empty or exceeds the 30,000-character safety limit.")
+          try:
+              data = json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"Invalid JSON payload: {exc}")
+
+          if not isinstance(data, dict) or data.get("schemaVersion") != 1:
+              raise SystemExit("Unsupported data format: schemaVersion must be 1.")
+          if set(data.keys()) != {"schemaVersion", "updatedAt", "rows"}:
+              raise SystemExit("Unexpected top-level properties in price list payload.")
+
+          updated_at = data.get("updatedAt")
+          if not isinstance(updated_at, str):
+              raise SystemExit("updatedAt must be an ISO timestamp.")
+          try:
+              datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+          except ValueError:
+              raise SystemExit("updatedAt is not a valid ISO timestamp.")
+
+          rows = data.get("rows")
+          if not isinstance(rows, list) or not 1 <= len(rows) <= 100:
+              raise SystemExit("rows must contain between 1 and 100 price entries.")
+
+          clean_rows = []
+          seen_ids = set()
+          for index, row in enumerate(rows, start=1):
+              if not isinstance(row, dict) or set(row.keys()) != {"id", "title", "description", "amount", "unit"}:
+                  raise SystemExit(f"Price row {index} has missing or unexpected fields.")
+              row_id = row["id"]
+              if not isinstance(row_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", row_id):
+                  raise SystemExit(f"Price row {index} has an invalid id.")
+              if row_id in seen_ids:
+                  raise SystemExit(f"Duplicate price row id: {row_id}")
+              seen_ids.add(row_id)
+
+              title = row["title"]
+              description = row["description"]
+              unit = row["unit"]
+              amount = row["amount"]
+              if not isinstance(title, str) or not title.strip() or len(title.strip()) > 160:
+                  raise SystemExit(f"Price row {index} must have a title of 1-160 characters.")
+              if not isinstance(description, str) or len(description.strip()) > 400:
+                  raise SystemExit(f"Price row {index} has an invalid description.")
+              if not isinstance(unit, str) or len(unit.strip()) > 40:
+                  raise SystemExit(f"Price row {index} has an invalid price unit.")
+              if isinstance(amount, bool) or not isinstance(amount, int) or amount < 0 or amount > 1000000:
+                  raise SystemExit(f"Price row {index} amount must be a whole number from 0 to 1,000,000.")
+              for field_name, value in (("title", title), ("description", description), ("unit", unit)):
+                  if any(ord(char) < 32 and char not in "\t\n\r" for char in value):
+                      raise SystemExit(f"Price row {index} {field_name} contains a control character.")
+
+              clean_rows.append({
+                  "id": row_id,
+                  "title": title.strip(),
+                  "description": description.strip(),
+                  "amount": amount,
+                  "unit": unit.strip()
+              })
+
+          normalized = {"schemaVersion": 1, "updatedAt": updated_at, "rows": clean_rows}
+          destination = Path("generalforsamling/prisblad.json")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          temporary = Path("generalforsamling/prisblad.json.tmp")
+          temporary.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          temporary.replace(destination)
+          print(f"Validated {len(clean_rows)} price entries. Only {destination} is written.")
+          PY
+
+      - name: Commit only generalforsamling/prisblad.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- generalforsamling/prisblad.json
+          if git diff --cached --quiet; then
+            echo "No price list changes to commit."
+            exit 0
+          fi
+          git commit -m "Update general meeting price list"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
