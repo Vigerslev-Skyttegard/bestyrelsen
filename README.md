@@ -49,3 +49,8 @@ Repositoryet er offentligt, fordi hjemmesiden henter data direkte fra filerne. A
 ## Historisk PDF
 
 `prisblad-2026.pdf` i hjemmeside-repositoryets dokumentarkiv kan bevares som et historisk/underskrevet dokument. Den aktuelle tabel på hjemmesiden hentes fremover fra `generalforsamling/prisblad.json` og vedligeholdes via bestyrelsessiden.
+
+
+## Kælderrum – standardiserede lejeradresser
+
+Kælderrummenes `tenantAddress` vælges i bestyrelsesadministrationen fra samme faste adresseliste som parkeringsoversigten. Tilladte værdier er de 69 standardiserede boligadresser, `Ekstern` eller en tom streng for et ledigt lokale. GitHub Actions afviser andre fritekstværdier.
